@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Mail, Lock, Zap, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, ArrowLeft } from 'lucide-react';
 import { Button, Input, Alert } from '../components/common';
 import { useAuth } from '../features/auth/useAuth';
 import logoAlina from '../assets/logo-alina.jpeg';
@@ -16,12 +16,6 @@ const Login = () => {
   const [submitting, setSubmitting] = useState(false);
 
   const from = location.state?.from?.pathname || '/dashboard';
-
-  const handleQuickAccess = () => {
-    setFormData({ email: 'admin@pruebadigital.com', password: 'Admin2026$Secure!' });
-    setErrors({});
-    setApiError(null);
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -106,20 +100,7 @@ const Login = () => {
               </Button>
             </form>
 
-            {/* Quick access */}
-            <div className="mt-6 pt-6 border-t border-surface-700/35">
-              <button
-                type="button"
-                onClick={handleQuickAccess}
-                disabled={submitting}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-accent-600 bg-accent-50 hover:bg-accent-100 rounded-xl transition-all duration-300 disabled:opacity-50 border border-accent-200"
-              >
-                <Zap className="w-4 h-4" />
-                Acceso Rapido (Admin)
-              </button>
-            </div>
-
-            <div className="mt-6 text-center">
+            <div className="mt-6 pt-6 border-t border-surface-700/35 text-center">
               <p className="text-surface-400">
                 No tienes una cuenta?{' '}
                 <Link to="/register" className="font-semibold text-alina-600 hover:text-alina-700 transition-colors">
