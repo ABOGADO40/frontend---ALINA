@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/jpeg" href="/logo-alina.jpeg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ALINA - Sistema de Evidencia Digital Forense con integridad verificable y cadena de custodia inmutable | powered by SOFTIA" />
+    <meta name="theme-color" content="#F4F8FA" />
+
+    <!-- Preconnect to Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Google Fonts - Bricolage Grotesque, Source Sans 3 & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <title>ALINA - Evidencia Digital Segura | powered by SOFTIA</title>
+
+    <style>
+      /* Prevent flash of unstyled content */
+      html {
+        background: #F4F8FA;
+        min-height: 100%;
+      }
+
+      /* Custom loading animation */
+      .initial-loader {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #F4F8FA;
+        z-index: 9999;
+        transition: opacity 0.5s ease;
+      }
+
+      /* Atmospheric mesh using all 3 logo colors */
+      .initial-loader::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(ellipse at 30% 40%, rgba(13, 107, 110, 0.06) 0%, transparent 50%),
+          radial-gradient(ellipse at 70% 60%, rgba(46, 196, 182, 0.04) 0%, transparent 50%),
+          radial-gradient(ellipse at 50% 80%, rgba(44, 62, 80, 0.03) 0%, transparent 40%);
+      }
+
+      .initial-loader.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .loader-content {
+        text-align: center;
+        position: relative;
+      }
+
+      .loader-icon {
+        width: 120px;
+        height: auto;
+        margin: 0 auto 16px;
+        animation: loaderPulse 2s ease-in-out infinite;
+      }
+
+      .loader-icon img {
+        width: 100%;
+        height: auto;
+        object-fit: contain;
+        filter: drop-shadow(0 4px 12px rgba(13, 107, 110, 0.15));
+      }
+
+      /* Spinner ring: deep teal top, turquoise side */
+      .loader-ring {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 140px;
+        height: 140px;
+        border: 2px solid transparent;
+        border-top: 2px solid rgba(13, 107, 110, 0.6);
+        border-right: 2px solid rgba(46, 196, 182, 0.3);
+        border-radius: 50%;
+        animation: loaderSpin 1.5s linear infinite;
+      }
+
+      .loader-text {
+        font-family: 'Bricolage Grotesque', 'Outfit', system-ui, sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        color: #2C3E50;
+        margin-top: 8px;
+        letter-spacing: 0.05em;
+      }
+
+      .loader-subtitle {
+        font-family: 'Source Sans 3', system-ui, sans-serif;
+        font-size: 12px;
+        color: #8DA0B3;
+        margin-top: 4px;
+      }
+
+      .loader-bar {
+        width: 120px;
+        height: 2px;
+        background: #DFE6EC;
+        border-radius: 1px;
+        margin: 12px auto 0;
+        overflow: hidden;
+      }
+
+      /* Progress bar: deep teal → turquoise (logo gradient) */
+      .loader-bar-fill {
+        width: 40%;
+        height: 100%;
+        background: linear-gradient(90deg, #0D6B6E, #2EC4B6);
+        border-radius: 1px;
+        animation: loaderBar 1.5s ease-in-out infinite;
+      }
+
+      @keyframes loaderPulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+      }
+
+      @keyframes loaderSpin {
+        from { transform: translate(-50%, -50%) rotate(0deg); }
+        to { transform: translate(-50%, -50%) rotate(360deg); }
+      }
+
+      @keyframes loaderBar {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(350%); }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Initial loader -->
+    <div class="initial-loader" id="initial-loader">
+      <div class="loader-content">
+        <div style="position: relative; display: inline-block;">
+          <div class="loader-icon">
+            <img src="/logo-alina.jpeg" alt="ALINA" />
+          </div>
+          <div class="loader-ring"></div>
+        </div>
+        <div class="loader-text">Evidencia Digital Segura</div>
+        <div class="loader-subtitle">Inicializando sistema...</div>
+        <div class="loader-bar">
+          <div class="loader-bar-fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="root"></div>
+
+    <script type="module" src="/src/main.jsx"></script>
+
+    <script>
+      // Hide loader when app is ready
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          var loader = document.getElementById('initial-loader');
+          if (loader) {
+            loader.classList.add('hidden');
+            setTimeout(function() {
+              loader.remove();
+            }, 500);
+          }
+        }, 500);
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,416 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Source Sans 3', 'DM Sans', system-ui, -apple-system, sans-serif;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-gradient-page antialiased;
+    color: #4E6680;
+    min-height: 100vh;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Bricolage Grotesque', 'Outfit', system-ui, sans-serif;
+    color: #2C3E50;
+    @apply font-semibold;
+  }
+
+  ::selection {
+    background: rgba(13, 107, 110, 0.15);
+    color: #172A3A;
+  }
+}
+
+@layer components {
+  /* ========== BUTTONS ========== */
+  .btn-primary {
+    @apply bg-gradient-to-r from-alina-600 to-alina-500 hover:from-alina-500 hover:to-cyan-600
+           text-white font-semibold py-2.5 px-5 rounded-xl
+           transition-all duration-300 ease-out
+           shadow-btn hover:shadow-btn-hover hover:-translate-y-0.5
+           focus:outline-none focus:ring-2 focus:ring-alina-400 focus:ring-offset-2 focus:ring-offset-white
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-btn;
+  }
+
+  .btn-secondary {
+    @apply bg-gradient-to-r from-cyan-700 to-cyan-600 hover:from-cyan-600 hover:to-cyan-500
+           text-white font-semibold py-2.5 px-5 rounded-xl
+           transition-all duration-300 ease-out
+           shadow-btn hover:shadow-btn-hover hover:-translate-y-0.5
+           focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-white
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-accent {
+    @apply bg-gradient-to-r from-accent-500 to-accent-400 hover:from-accent-400 hover:to-accent-300
+           font-semibold py-2.5 px-5 rounded-xl
+           transition-all duration-300 ease-out
+           shadow-lg shadow-accent-500/20 hover:shadow-xl hover:shadow-accent-500/30 hover:-translate-y-0.5
+           focus:outline-none focus:ring-2 focus:ring-accent-400 focus:ring-offset-2 focus:ring-offset-white
+           disabled:opacity-50 disabled:cursor-not-allowed;
+    color: #FFF;
+  }
+
+  .btn-coral {
+    @apply bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700
+           text-white font-semibold py-2.5 px-5 rounded-xl
+           transition-all duration-300 ease-out
+           shadow-lg shadow-accent-500/20 hover:shadow-xl hover:shadow-accent-500/30 hover:-translate-y-0.5
+           focus:outline-none focus:ring-2 focus:ring-accent-400 focus:ring-offset-2 focus:ring-offset-white
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-outline {
+    @apply border border-alina-500/30 text-alina-700
+           bg-white/90 backdrop-blur-sm
+           font-semibold py-2.5 px-5 rounded-xl
+           transition-all duration-300 ease-out
+           hover:bg-alina-50 hover:border-alina-500/50 hover:-translate-y-0.5 hover:shadow-glow-teal
+           focus:outline-none focus:ring-2 focus:ring-alina-400 focus:ring-offset-2 focus:ring-offset-white
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent font-medium py-2.5 px-5 rounded-xl
+           transition-all duration-300 ease-out
+           hover:bg-alina-50/50 hover:text-alina-700
+           focus:outline-none focus:ring-2 focus:ring-alina-500/30
+           disabled:opacity-50 disabled:cursor-not-allowed;
+    color: #6A8198;
+  }
+
+  .btn-danger {
+    @apply bg-gradient-to-r from-danger-600 to-danger-500 hover:from-danger-500 hover:to-danger-400
+           text-white font-semibold py-2.5 px-5 rounded-xl
+           transition-all duration-300 ease-out
+           shadow-lg shadow-danger-500/20 hover:shadow-xl hover:shadow-danger-500/30 hover:-translate-y-0.5
+           focus:outline-none focus:ring-2 focus:ring-danger-400 focus:ring-offset-2 focus:ring-offset-white
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* ========== INPUTS ========== */
+  .input-field {
+    @apply block w-full rounded-xl border border-surface-700
+           px-4 py-3 placeholder-surface-500
+           bg-white/90 backdrop-blur-sm
+           transition-all duration-300 ease-out
+           focus:outline-none focus:border-alina-500 focus:ring-2 focus:ring-alina-500/15
+           hover:border-surface-600
+           disabled:bg-surface-900/50 disabled:cursor-not-allowed disabled:opacity-60
+           read-only:bg-surface-900/30;
+    color: #3A5068;
+  }
+
+  .input-error {
+    @apply border-danger-500/50 focus:border-danger-400 focus:ring-danger-500/15
+           bg-danger-50/20;
+  }
+
+  .input-success {
+    @apply border-success-500/50 focus:border-success-400 focus:ring-success-500/15
+           bg-success-50/20;
+  }
+
+  /* ========== CARDS ========== */
+  .card {
+    @apply bg-white/95 backdrop-blur-sm rounded-2xl shadow-card border border-surface-700/40
+           transition-all duration-300 ease-out;
+  }
+
+  .card-hover {
+    @apply hover:shadow-card-hover hover:-translate-y-1 hover:border-alina-500/20;
+  }
+
+  .card-header {
+    @apply px-6 py-5 border-b border-surface-700/40 bg-gradient-to-r from-surface-900/50 to-transparent;
+  }
+
+  .card-body {
+    @apply p-6;
+  }
+
+  .card-footer {
+    @apply px-6 py-4 border-t border-surface-700/40 bg-surface-900/30;
+  }
+
+  /* ========== GLASSMORPHISM ========== */
+  .glass {
+    @apply bg-white/70 backdrop-blur-xl border border-surface-700/25 shadow-soft;
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+  }
+
+  .glass-card {
+    @apply bg-white/75 backdrop-blur-xl rounded-2xl border border-surface-700/25 shadow-card;
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+  }
+
+  /* ========== BADGES ========== */
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .badge-primary {
+    @apply bg-alina-50 text-alina-700 border border-alina-200;
+  }
+
+  .badge-success {
+    @apply bg-success-50 text-success-700 border border-success-200;
+  }
+
+  .badge-warning {
+    @apply bg-accent-50 text-accent-700 border border-accent-200;
+  }
+
+  .badge-danger {
+    @apply bg-danger-50 text-danger-700 border border-danger-200;
+  }
+
+  .badge-info {
+    @apply bg-cyan-50 text-cyan-700 border border-cyan-200;
+  }
+
+  /* ========== NAVIGATION ========== */
+  .nav-link {
+    @apply flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium
+           transition-all duration-300 ease-out
+           hover:bg-alina-50/50 hover:text-alina-700
+           hover:translate-x-1;
+    color: #6A8198;
+  }
+
+  .nav-link-active {
+    @apply bg-alina-50 text-alina-700
+           border-l-4 border-alina-500 shadow-sm;
+  }
+
+  /* ========== TABLES ========== */
+  .table-container {
+    @apply overflow-x-auto rounded-2xl border border-surface-700/40;
+  }
+
+  .table-header {
+    @apply bg-surface-900/50;
+    color: #4E6680;
+  }
+
+  .table-row {
+    @apply border-b border-surface-700/25 transition-colors duration-200
+           hover:bg-alina-50/20;
+  }
+
+  .table-row-alt {
+    @apply bg-surface-900/25;
+  }
+
+  /* ========== ALERTS ========== */
+  .alert {
+    @apply p-4 rounded-xl border-l-4 flex items-start gap-3;
+  }
+
+  .alert-info {
+    @apply bg-alina-50/50 border-alina-500 text-alina-800;
+  }
+
+  .alert-success {
+    @apply bg-success-50/50 border-success-500 text-success-800;
+  }
+
+  .alert-warning {
+    @apply bg-accent-50/50 border-accent-500 text-accent-800;
+  }
+
+  .alert-error {
+    @apply bg-danger-50/50 border-danger-500 text-danger-800;
+  }
+
+  /* ========== SIDEBAR ========== */
+  .sidebar {
+    @apply bg-gradient-sidebar backdrop-blur-md border-r border-surface-700/40;
+  }
+
+  .sidebar-item {
+    @apply flex items-center gap-3 px-4 py-3 mx-2 rounded-xl text-sm font-medium
+           transition-all duration-300 ease-out
+           hover:bg-alina-50/50
+           hover:text-alina-700 hover:translate-x-1;
+    color: #6A8198;
+  }
+
+  .sidebar-item-active {
+    @apply bg-alina-50 text-alina-700
+           shadow-sm border-l-4 border-alina-500 ml-0 rounded-l-none;
+  }
+
+  /* ========== MODALS ========== */
+  .modal-overlay {
+    @apply fixed inset-0 bg-surface-100/30 backdrop-blur-sm z-50;
+  }
+
+  .modal-content {
+    @apply bg-white rounded-3xl shadow-float-lg border border-surface-700/40
+           max-w-lg w-full mx-4 overflow-hidden;
+  }
+
+  /* ========== LOADERS ========== */
+  .loader-ring {
+    @apply w-8 h-8 border-4 border-surface-700/40 border-t-alina-500 rounded-full animate-spin;
+  }
+
+  .loader-dots {
+    @apply flex gap-1;
+  }
+
+  .loader-dot {
+    @apply w-2 h-2 rounded-full bg-alina-500 animate-bounce;
+  }
+
+  /* ========== FILE UPLOAD ========== */
+  .upload-zone {
+    @apply border-2 border-dashed border-surface-600/60 rounded-2xl p-8
+           bg-white/50
+           transition-all duration-300 ease-out
+           hover:border-alina-500/40 hover:bg-alina-50/20
+           cursor-pointer;
+  }
+
+  .upload-zone-active {
+    @apply border-alina-500 bg-alina-50/30 shadow-glow-teal;
+  }
+
+  /* ========== PROGRESS BAR ========== */
+  .progress-bar {
+    @apply h-2.5 bg-surface-700/40 rounded-full overflow-hidden;
+  }
+
+  .progress-fill {
+    @apply h-full bg-gradient-to-r from-alina-600 to-cyan-500 rounded-full
+           transition-all duration-500 ease-out;
+  }
+
+  /* ========== SECTION TITLES ========== */
+  .section-title {
+    @apply text-2xl font-bold font-display;
+    color: #2C3E50;
+  }
+
+  .section-subtitle {
+    @apply mt-1;
+    color: #6A8198;
+  }
+
+  /* ========== STAT CARDS ========== */
+  .stat-card {
+    @apply bg-white/95 rounded-2xl border border-surface-700/40 p-6
+           shadow-stat transition-all duration-300
+           hover:shadow-card-hover hover:-translate-y-1;
+  }
+
+  .stat-icon {
+    @apply w-14 h-14 rounded-xl flex items-center justify-center;
+  }
+
+  .stat-icon-blue {
+    @apply bg-alina-50 text-alina-600;
+  }
+
+  .stat-icon-green {
+    @apply bg-success-50 text-success-600;
+  }
+
+  .stat-icon-amber {
+    @apply bg-accent-50 text-accent-600;
+  }
+
+  .stat-icon-coral {
+    @apply bg-accent-50 text-accent-600;
+  }
+
+  .stat-icon-teal {
+    @apply bg-cyan-50 text-cyan-600;
+  }
+}
+
+@layer utilities {
+  /* ========== TEXT GRADIENTS ========== */
+  .text-gradient-primary {
+    @apply bg-gradient-to-r from-alina-600 to-cyan-600 bg-clip-text text-transparent;
+  }
+
+  .text-gradient-warm {
+    @apply bg-gradient-to-r from-accent-500 to-accent-400 bg-clip-text text-transparent;
+  }
+
+  .text-gradient-fresh {
+    @apply bg-gradient-to-r from-success-600 to-alina-600 bg-clip-text text-transparent;
+  }
+
+  /* ========== HOVER EFFECTS ========== */
+  .hover-lift {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover;
+  }
+
+  .hover-glow {
+    @apply transition-all duration-300 hover:shadow-glow-teal;
+  }
+
+  .hover-scale {
+    @apply transition-transform duration-300 hover:scale-105;
+  }
+
+  .hover-prismatic {
+    @apply transition-all duration-300 hover:shadow-prismatic-hover;
+  }
+
+  /* ========== ANIMATION DELAYS ========== */
+  .delay-100 { animation-delay: 100ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-400 { animation-delay: 400ms; }
+  .delay-500 { animation-delay: 500ms; }
+
+  /* ========== PATTERN BACKGROUNDS ========== */
+  /* Dot grid using logo deep teal */
+  .pattern-dots {
+    background-image: radial-gradient(rgba(13, 107, 110, 0.08) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  /* Line grid using logo deep teal */
+  .pattern-grid {
+    background-image:
+      linear-gradient(rgba(13, 107, 110, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(13, 107, 110, 0.04) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Diagonal circuit grid: deep teal + turquoise (logo V-trace motif) */
+  .pattern-circuit {
+    background-image:
+      linear-gradient(45deg, rgba(13, 107, 110, 0.03) 1px, transparent 1px),
+      linear-gradient(-45deg, rgba(46, 196, 182, 0.02) 1px, transparent 1px);
+    background-size: 30px 30px;
+  }
+
+  /* ========== SCROLLBAR ========== */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    @apply bg-transparent rounded-full;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-surface-600/60 rounded-full hover:bg-alina-500;
+  }
+}
