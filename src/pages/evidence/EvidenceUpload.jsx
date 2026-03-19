@@ -233,7 +233,14 @@ const EvidenceUpload = () => {
         navigate(`/evidence/${response.data.id}`);
       }
     } catch (err) {
-      setError(err.error?.message || err.response?.data?.error?.message || 'Error al procesar la evidencia');
+      const errorData = err.response?.data?.error || err.error;
+      let errorMsg = errorData?.message || 'Error al procesar la evidencia';
+      // Mostrar detalles de validacion si existen
+      if (errorData?.details?.length > 0) {
+        const fields = errorData.details.map(d => `${d.field}: ${d.message}`).join('. ');
+        errorMsg += ` (${fields})`;
+      }
+      setError(errorMsg);
     } finally {
       setUploading(false);
     }

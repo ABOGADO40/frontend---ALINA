@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import useDrivePicker from 'react-google-drive-picker';
 import { HardDrive } from 'lucide-react';
 
@@ -25,6 +25,14 @@ const GOOGLE_NATIVE_MIMES = [
  */
 const GoogleDrivePicker = ({ onFilesSelected, disabled = false }) => {
   const [openPicker, authResponse] = useDrivePicker();
+  const authResponseRef = useRef(null);
+
+  // Mantener ref sincronizado con authResponse para acceder dentro de callbacks
+  useEffect(() => {
+    if (authResponse) {
+      authResponseRef.current = authResponse;
+    }
+  }, [authResponse]);
 
   const handleOpenPicker = useCallback(() => {
     if (!GOOGLE_CLIENT_ID || !GOOGLE_API_KEY) {
@@ -64,6 +72,11 @@ const GoogleDrivePicker = ({ onFilesSelected, disabled = false }) => {
           }
 
           if (validFiles.length > 0) {
+            // El token viene de authResponse (via ref), no de data.access_token
+            const accessToken = data.access_token
+              || authResponseRef.current?.access_token
+              || authResponseRef.current?.token;
+
             onFilesSelected({
               files: validFiles.map(doc => ({
                 id: doc.id,
@@ -71,7 +84,7 @@ const GoogleDrivePicker = ({ onFilesSelected, disabled = false }) => {
                 mimeType: doc.mimeType,
                 sizeBytes: doc.sizeBytes || 0
               })),
-              accessToken: data.access_token
+              accessToken
             });
           }
         }
