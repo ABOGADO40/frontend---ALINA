@@ -108,6 +108,16 @@ const Login = () => {
                 </Link>
               </p>
             </div>
+
+            <div className="mt-4 flex items-center justify-center gap-3 text-xs text-surface-400">
+              <Link to="/privacy" className="hover:text-alina-600 transition-colors">
+                Politica de Privacidad
+              </Link>
+              <span className="opacity-30">|</span>
+              <Link to="/terms" className="hover:text-alina-600 transition-colors">
+                Terminos y Condiciones
+              </Link>
+            </div>
           </div>
 
           <Link to="/" className="mt-6 flex items-center justify-center gap-2 text-surface-400 hover:text-alina-600 transition-colors">

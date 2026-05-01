@@ -8,6 +8,7 @@ import {
   Users,
   FileText,
   Search,
+  Settings,
   ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../../features/auth/useAuth';
@@ -59,7 +60,8 @@ const Sidebar = ({ isOpen, onClose }) => {
       color: 'danger',
       items: [
         { label: 'Usuarios', path: '/admin/users', icon: Users, color: 'accent' },
-        { label: 'Auditoria', path: '/admin/audit', icon: FileText, color: 'danger' }
+        { label: 'Auditoria', path: '/admin/audit', icon: FileText, color: 'danger' },
+        { label: 'Configuracion', path: '/admin/settings', icon: Settings, color: 'cyan' }
       ]
     }
   ];

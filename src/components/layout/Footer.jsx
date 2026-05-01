@@ -25,8 +25,8 @@ const Footer = () => {
     {
       title: 'Legal',
       links: [
-        { label: 'Privacidad', href: '#privacy' },
-        { label: 'Terminos', href: '#terms' },
+        { label: 'Privacidad', to: '/privacy' },
+        { label: 'Terminos', to: '/terms' },
         { label: 'Licencia', href: '#license' },
       ]
     }
@@ -80,13 +80,23 @@ const Footer = () => {
               <ul className="space-y-3">
                 {section.links.map((link, linkIndex) => (
                   <li key={linkIndex}>
-                    <a
-                      href={link.href}
-                      className="text-surface-400 hover:text-alina-600 transition-colors text-sm flex items-center gap-1 group"
-                    >
-                      {link.label}
-                      <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </a>
+                    {link.to ? (
+                      <Link
+                        to={link.to}
+                        className="text-surface-400 hover:text-alina-600 transition-colors text-sm flex items-center gap-1 group"
+                      >
+                        {link.label}
+                        <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </Link>
+                    ) : (
+                      <a
+                        href={link.href}
+                        className="text-surface-400 hover:text-alina-600 transition-colors text-sm flex items-center gap-1 group"
+                      >
+                        {link.label}
+                        <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>

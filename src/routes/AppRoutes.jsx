@@ -9,6 +9,8 @@ import Landing from '../pages/Landing';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
 import Dashboard from '../pages/Dashboard';
+import PrivacyPolicy from '../pages/PrivacyPolicy';
+import TermsAndConditions from '../pages/TermsAndConditions';
 
 // Case pages
 import { CaseList, CaseCreate, CaseDetail } from '../pages/cases';
@@ -20,7 +22,7 @@ import { EvidenceUpload, EvidenceList, EvidenceDetail } from '../pages/evidence'
 import { ExportCreate, ExportList } from '../pages/exports';
 
 // Admin pages
-import { UserList, AuditLog } from '../pages/admin';
+import { UserList, AuditLog, LegalSettings } from '../pages/admin';
 
 // Verification pages
 import { PublicVerification } from '../pages/verification';
@@ -58,6 +60,10 @@ const AppRoutes = () => {
           isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />
         }
       />
+
+      {/* Public Legal Pages - accesibles con o sin autenticacion */}
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsAndConditions />} />
 
       {/* Protected Routes - Main Layout */}
       <Route
@@ -101,6 +107,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute roles={USER_ROLES.SUPER_ADMIN}>
               <AuditLog />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/settings"
+          element={
+            <ProtectedRoute roles={USER_ROLES.SUPER_ADMIN}>
+              <LegalSettings />
             </ProtectedRoute>
           }
         />
