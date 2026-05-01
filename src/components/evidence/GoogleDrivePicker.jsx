@@ -45,6 +45,7 @@ const GoogleDrivePicker = ({ onFilesSelected, disabled = false }) => {
       developerKey: GOOGLE_API_KEY,
       appId: GOOGLE_APP_ID,
       viewId: 'DOCS',
+      customScopes: ['https://www.googleapis.com/auth/drive.file'],
       showUploadView: false,
       showUploadFolders: false,
       supportDrives: true,
