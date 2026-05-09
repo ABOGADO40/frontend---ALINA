@@ -67,7 +67,11 @@ apiClient.interceptors.response.use(
                  'Ha ocurrido un error inesperado',
         details: error.response?.data?.error?.details || [],
         status: error.response?.status || 500
-      }
+      },
+      // Body crudo de la respuesta para consumidores que necesiten estructuras
+      // especificas (ej. import-drive devuelve { data: { results, summary } } con 422)
+      data: error.response?.data || null,
+      status: error.response?.status || 0
     };
 
     return Promise.reject(errorResponse);
@@ -109,7 +113,9 @@ uploadClient.interceptors.response.use(
                  'Error al subir el archivo',
         details: error.response?.data?.error?.details || [],
         status: error.response?.status || 500
-      }
+      },
+      data: error.response?.data || null,
+      status: error.response?.status || 0
     };
     return Promise.reject(errorResponse);
   }

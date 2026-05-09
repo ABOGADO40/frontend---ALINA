@@ -58,6 +58,13 @@ const evidenceService = {
     if (metadata.description) formData.append('description', metadata.description);
     if (metadata.caseId) formData.append('caseId', metadata.caseId);
 
+    // Enviar fecha de modificacion del archivo desde el filesystem del cliente
+    // (el navegador NO transmite esto en el body multipart por defecto)
+    if (file && typeof file.lastModified === 'number' && !Number.isNaN(file.lastModified)) {
+      formData.append('fileLastModified', String(file.lastModified));
+      formData.append('fileLastModifiedIso', new Date(file.lastModified).toISOString());
+    }
+
     // Agregar datos del aportante si se proporcionan
     if (contributorData) {
       if (contributorData.actaLugar) formData.append('actaLugar', contributorData.actaLugar);

@@ -233,6 +233,21 @@ const EvidenceUpload = () => {
         navigate(`/evidence/${response.data.id}`);
       }
     } catch (err) {
+      // Caso especial import-drive: el backend responde 422 con results por archivo
+      // cuando todos los archivos fallaron (token expirado, integridad, etc.).
+      // El error real esta en err.data.results, no en err.error.message.
+      const driveResults = err?.data?.data?.results;
+      if (Array.isArray(driveResults) && driveResults.length > 0) {
+        const failed = driveResults.filter(r => !r.success);
+        if (failed.length > 0) {
+          const detalles = failed
+            .map(r => `${r.fileName || r.fileId}: ${r.error || 'Error desconocido'}`)
+            .join(' | ');
+          setError(`No se pudo importar desde Google Drive. ${detalles}`);
+          return;
+        }
+      }
+
       const errorData = err.response?.data?.error || err.error;
       let errorMsg = errorData?.message || 'Error al procesar la evidencia';
       // Mostrar detalles de validacion si existen
