@@ -915,31 +915,31 @@ const EvidenceUpload = () => {
           aria-modal="true"
           aria-labelledby="upload-modal-title"
         >
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6 border border-surface-200">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6 border-2 border-gray-300">
             {/* Icono animado */}
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-alina-50 rounded-full flex items-center justify-center">
+              <div className="w-16 h-16 bg-alina-100 rounded-full flex items-center justify-center">
                 {sourceMode === 'drive' ? (
-                  <HardDrive className="w-8 h-8 text-alina-600 animate-pulse" />
+                  <HardDrive className="w-8 h-8 text-alina-700 animate-pulse" />
                 ) : (
-                  <Upload className="w-8 h-8 text-alina-600 animate-pulse" />
+                  <Upload className="w-8 h-8 text-alina-700 animate-pulse" />
                 )}
               </div>
             </div>
 
-            {/* Titulo */}
-            <h3 id="upload-modal-title" className="text-lg font-semibold text-surface-900 text-center mb-2">
+            {/* Titulo - alto contraste */}
+            <h3 id="upload-modal-title" className="text-xl font-bold text-gray-900 text-center mb-3" style={{ color: '#111827' }}>
               {sourceMode === 'drive'
                 ? 'Importando desde Google Drive...'
                 : (uploadProgress < 100 ? 'Subiendo archivo...' : 'Procesando en el servidor...')}
             </h3>
 
-            {/* Advertencia clara */}
-            <div className="bg-amber-50 border border-amber-300 rounded-lg p-3 mb-4">
-              <p className="text-sm text-amber-800 text-center font-medium">
+            {/* Advertencia clara - alto contraste */}
+            <div className="bg-amber-50 border-2 border-amber-300 rounded-lg p-3 mb-4">
+              <p className="text-sm text-amber-900 text-center font-bold" style={{ color: '#78350f' }}>
                 Por favor, no cierre ni recargue esta pagina
               </p>
-              <p className="text-xs text-amber-700 text-center mt-1">
+              <p className="text-xs text-amber-800 text-center mt-1" style={{ color: '#92400e' }}>
                 El archivo se esta cargando. Si sale ahora, debera iniciar la carga nuevamente.
               </p>
             </div>
@@ -948,20 +948,20 @@ const EvidenceUpload = () => {
             {sourceMode === 'local' && (
               <>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-surface-600">
+                  <span className="text-sm text-gray-800 font-medium" style={{ color: '#1f2937' }}>
                     {selectedFile?.name ? (selectedFile.name.length > 40 ? selectedFile.name.substring(0, 37) + '...' : selectedFile.name) : 'Archivo'}
                   </span>
-                  <span className="text-sm font-semibold text-alina-700">
+                  <span className="text-sm font-bold text-alina-700" style={{ color: '#0e7490' }}>
                     {uploadProgress}%
                   </span>
                 </div>
-                <div className="w-full h-3 bg-surface-200 rounded-full overflow-hidden">
+                <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden border border-gray-300">
                   <div
                     className="h-full bg-gradient-to-r from-alina-500 to-alina-600 rounded-full transition-all duration-300 ease-out"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
-                <p className="text-xs text-surface-500 text-center mt-3">
+                <p className="text-xs text-gray-700 text-center mt-3 font-medium" style={{ color: '#374151' }}>
                   {uploadProgress < 100
                     ? (selectedFile?.size ? `${formatFileSize(Math.floor((selectedFile.size * uploadProgress) / 100))} de ${formatFileSize(selectedFile.size)}` : '')
                     : 'Calculando hash, sellando y registrando en almacenamiento...'}
@@ -972,11 +972,11 @@ const EvidenceUpload = () => {
             {/* Para Google Drive: solo spinner sin barra (no hay progreso medible) */}
             {sourceMode === 'drive' && (
               <div className="text-center">
-                <div className="inline-block w-8 h-8 border-4 border-alina-200 border-t-alina-600 rounded-full animate-spin mb-3"></div>
-                <p className="text-sm text-surface-600">
+                <div className="inline-block w-8 h-8 border-4 border-alina-200 border-t-alina-700 rounded-full animate-spin mb-3"></div>
+                <p className="text-sm text-gray-800 font-medium" style={{ color: '#1f2937' }}>
                   Descargando {driveFiles.length} archivo(s) desde Google Drive
                 </p>
-                <p className="text-xs text-surface-500 mt-1">
+                <p className="text-xs text-gray-700 mt-1" style={{ color: '#374151' }}>
                   Esto puede tardar varios minutos para archivos grandes
                 </p>
               </div>
@@ -999,7 +999,7 @@ const EvidenceUpload = () => {
           aria-labelledby="error-modal-title"
           onClick={(e) => { if (e.target === e.currentTarget) setErrorModal(null); }}
         >
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-surface-200 animate-in fade-in zoom-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border-2 border-gray-300 animate-in fade-in zoom-in duration-200">
             {/* Icono segun tipo */}
             <div className="flex justify-center mb-4">
               <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
@@ -1011,32 +1011,32 @@ const EvidenceUpload = () => {
                 'bg-red-100'
               }`}>
                 {errorModal.type === 'network' ? (
-                  <WifiOff className="w-8 h-8 text-orange-600" />
+                  <WifiOff className="w-8 h-8 text-orange-700" />
                 ) : errorModal.type === 'server' || errorModal.type === 'timeout' ? (
-                  <ServerCrash className="w-8 h-8 text-red-600" />
+                  <ServerCrash className="w-8 h-8 text-red-700" />
                 ) : (
-                  <AlertTriangle className="w-8 h-8 text-red-600" />
+                  <AlertTriangle className="w-8 h-8 text-red-700" />
                 )}
               </div>
             </div>
 
-            {/* Titulo */}
-            <h3 id="error-modal-title" className="text-lg font-bold text-surface-900 text-center mb-2">
+            {/* Titulo - contraste alto */}
+            <h3 id="error-modal-title" className="text-xl font-bold text-gray-900 text-center mb-3" style={{ color: '#111827' }}>
               {errorModal.title}
             </h3>
 
-            {/* Mensaje principal */}
-            <p className="text-sm text-surface-700 text-center mb-4">
+            {/* Mensaje principal - contraste alto */}
+            <p className="text-sm text-gray-800 text-center mb-4 leading-relaxed" style={{ color: '#1f2937' }}>
               {errorModal.message}
             </p>
 
             {/* Detalles tecnicos colapsables (solo si hay) */}
             {errorModal.technicalDetails && (
               <details className="mb-4">
-                <summary className="text-xs text-surface-500 cursor-pointer hover:text-surface-700 select-none">
+                <summary className="text-xs text-gray-700 cursor-pointer hover:text-gray-900 select-none font-medium" style={{ color: '#374151' }}>
                   Detalles tecnicos
                 </summary>
-                <div className="mt-2 p-2 bg-surface-100 rounded font-mono text-xs text-surface-600 break-all">
+                <div className="mt-2 p-2 bg-gray-100 rounded font-mono text-xs text-gray-800 break-all border border-gray-200" style={{ color: '#1f2937' }}>
                   {errorModal.technicalDetails}
                 </div>
               </details>
@@ -1044,8 +1044,8 @@ const EvidenceUpload = () => {
 
             {/* Sugerencias segun tipo */}
             {errorModal.type === 'network' && (
-              <div className="mb-4 p-3 bg-blue-50 rounded-lg text-xs text-blue-800">
-                <p className="font-medium mb-1">Sugerencias:</p>
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg text-xs text-blue-900 border border-blue-200" style={{ color: '#1e3a8a' }}>
+                <p className="font-bold mb-1">Sugerencias:</p>
                 <ul className="list-disc list-inside space-y-0.5">
                   <li>Verifica tu conexion a internet</li>
                   <li>Espera unos minutos y vuelve a intentar</li>
@@ -1054,8 +1054,8 @@ const EvidenceUpload = () => {
               </div>
             )}
             {errorModal.type === 'server' && (
-              <div className="mb-4 p-3 bg-blue-50 rounded-lg text-xs text-blue-800">
-                <p className="font-medium mb-1">Sugerencias:</p>
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg text-xs text-blue-900 border border-blue-200" style={{ color: '#1e3a8a' }}>
+                <p className="font-bold mb-1">Sugerencias:</p>
                 <ul className="list-disc list-inside space-y-0.5">
                   <li>El servidor pudo estar reiniciandose</li>
                   <li>Espera 1-2 minutos y vuelve a intentar</li>
@@ -1064,8 +1064,8 @@ const EvidenceUpload = () => {
               </div>
             )}
             {errorModal.type === 'size' && (
-              <div className="mb-4 p-3 bg-blue-50 rounded-lg text-xs text-blue-800">
-                <p className="font-medium mb-1">Sugerencias:</p>
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg text-xs text-blue-900 border border-blue-200" style={{ color: '#1e3a8a' }}>
+                <p className="font-bold mb-1">Sugerencias:</p>
                 <ul className="list-disc list-inside space-y-0.5">
                   <li>Comprime el archivo (ZIP) antes de subirlo</li>
                   <li>Reduce la calidad del video si aplica</li>
@@ -1079,7 +1079,8 @@ const EvidenceUpload = () => {
               <button
                 type="button"
                 onClick={() => setErrorModal(null)}
-                className="flex-1 px-4 py-2 bg-surface-200 hover:bg-surface-300 text-surface-800 rounded-lg font-medium text-sm transition-colors"
+                className="flex-1 px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-lg font-semibold text-sm transition-colors border border-gray-300"
+                style={{ color: '#111827' }}
               >
                 Cerrar
               </button>
@@ -1092,7 +1093,8 @@ const EvidenceUpload = () => {
                     // Disparar submit programaticamente
                     handleSubmit({ preventDefault: () => {} });
                   }}
-                  className="flex-1 px-4 py-2 bg-alina-600 hover:bg-alina-700 text-white rounded-lg font-medium text-sm transition-colors"
+                  className="flex-1 px-4 py-2.5 bg-alina-600 hover:bg-alina-700 text-white rounded-lg font-semibold text-sm transition-colors shadow"
+                  style={{ color: '#ffffff' }}
                 >
                   Reintentar
                 </button>
