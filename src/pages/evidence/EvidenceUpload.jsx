@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -73,7 +74,7 @@ const EvidenceUpload = () => {
     fetchCases();
   }, []);
 
-  // Bloquear cierre/recarga de pestaña mientras se sube archivo
+  // Bloquear cierre/recarga de pestaña mientras se sube archivo + bloquear scroll del body
   useEffect(() => {
     if (!uploading) return;
     const handleBeforeUnload = (e) => {
@@ -83,7 +84,15 @@ const EvidenceUpload = () => {
       return e.returnValue;
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+
+    // Bloquear scroll del body mientras el modal esta visible
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.body.style.overflow = previousOverflow;
+    };
   }, [uploading]);
 
   const fetchCases = async () => {
@@ -786,11 +795,14 @@ const EvidenceUpload = () => {
       </div>
 
       {/* ============================================================ */}
-      {/* MODAL BLOQUEANTE DE CARGA - se cierra automaticamente al 100% */}
+      {/* MODAL BLOQUEANTE DE CARGA - portal a document.body          */}
+      {/* Se renderiza en el body para escapar de cualquier ancestor   */}
+      {/* con transform/filter que rompa position:fixed                */}
       {/* ============================================================ */}
-      {uploading && (
+      {uploading && createPortal(
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/75 backdrop-blur-sm"
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
           role="dialog"
           aria-modal="true"
           aria-labelledby="upload-modal-title"
@@ -862,7 +874,8 @@ const EvidenceUpload = () => {
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
