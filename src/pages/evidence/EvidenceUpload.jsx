@@ -73,6 +73,19 @@ const EvidenceUpload = () => {
     fetchCases();
   }, []);
 
+  // Bloquear cierre/recarga de pestaña mientras se sube archivo
+  useEffect(() => {
+    if (!uploading) return;
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      // Chrome requiere returnValue (string ignorado por navegadores modernos)
+      e.returnValue = 'La carga de la evidencia esta en curso. Si sale ahora, la subida se cancelara y debera iniciarla nuevamente.';
+      return e.returnValue;
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [uploading]);
+
   const fetchCases = async () => {
     setLoadingCases(true);
     try {
@@ -393,43 +406,6 @@ const EvidenceUpload = () => {
             </>
           )}
 
-          {/* Upload progress (for local uploads) */}
-          {uploading && sourceMode === 'local' && (
-            <div className="mt-4 p-4 bg-surface-900/40 rounded-lg">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-alina-50 rounded-lg flex items-center justify-center">
-                  <Upload className="w-5 h-5 text-alina-600 animate-pulse" />
-                </div>
-                <div>
-                  <p className="font-medium text-surface-50">Subiendo archivo...</p>
-                  <p className="text-sm text-surface-400">{uploadProgress}% completado</p>
-                </div>
-              </div>
-              <div className="w-full h-2 bg-surface-900/40 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-alina-500 rounded-full transition-all duration-300"
-                  style={{ width: `${uploadProgress}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Drive import progress */}
-          {uploading && sourceMode === 'drive' && (
-            <div className="mt-4 p-4 bg-surface-900/40 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-alina-50 rounded-lg flex items-center justify-center">
-                  <HardDrive className="w-5 h-5 text-alina-600 animate-pulse" />
-                </div>
-                <div>
-                  <p className="font-medium text-surface-50">Importando desde Google Drive...</p>
-                  <p className="text-sm text-surface-400">
-                    Descargando y procesando {driveFiles.length} archivo(s)
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Metadata */}
@@ -808,6 +784,86 @@ const EvidenceUpload = () => {
           <li>Preparacion para exportacion</li>
         </ol>
       </div>
+
+      {/* ============================================================ */}
+      {/* MODAL BLOQUEANTE DE CARGA - se cierra automaticamente al 100% */}
+      {/* ============================================================ */}
+      {uploading && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="upload-modal-title"
+        >
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6 border border-surface-200">
+            {/* Icono animado */}
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-alina-50 rounded-full flex items-center justify-center">
+                {sourceMode === 'drive' ? (
+                  <HardDrive className="w-8 h-8 text-alina-600 animate-pulse" />
+                ) : (
+                  <Upload className="w-8 h-8 text-alina-600 animate-pulse" />
+                )}
+              </div>
+            </div>
+
+            {/* Titulo */}
+            <h3 id="upload-modal-title" className="text-lg font-semibold text-surface-900 text-center mb-2">
+              {sourceMode === 'drive'
+                ? 'Importando desde Google Drive...'
+                : (uploadProgress < 100 ? 'Subiendo archivo...' : 'Procesando en el servidor...')}
+            </h3>
+
+            {/* Advertencia clara */}
+            <div className="bg-amber-50 border border-amber-300 rounded-lg p-3 mb-4">
+              <p className="text-sm text-amber-800 text-center font-medium">
+                Por favor, no cierre ni recargue esta pagina
+              </p>
+              <p className="text-xs text-amber-700 text-center mt-1">
+                El archivo se esta cargando. Si sale ahora, debera iniciar la carga nuevamente.
+              </p>
+            </div>
+
+            {/* Barra de progreso */}
+            {sourceMode === 'local' && (
+              <>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-surface-600">
+                    {selectedFile?.name ? (selectedFile.name.length > 40 ? selectedFile.name.substring(0, 37) + '...' : selectedFile.name) : 'Archivo'}
+                  </span>
+                  <span className="text-sm font-semibold text-alina-700">
+                    {uploadProgress}%
+                  </span>
+                </div>
+                <div className="w-full h-3 bg-surface-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-alina-500 to-alina-600 rounded-full transition-all duration-300 ease-out"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+                <p className="text-xs text-surface-500 text-center mt-3">
+                  {uploadProgress < 100
+                    ? (selectedFile?.size ? `${formatFileSize(Math.floor((selectedFile.size * uploadProgress) / 100))} de ${formatFileSize(selectedFile.size)}` : '')
+                    : 'Calculando hash, sellando y registrando en almacenamiento...'}
+                </p>
+              </>
+            )}
+
+            {/* Para Google Drive: solo spinner sin barra (no hay progreso medible) */}
+            {sourceMode === 'drive' && (
+              <div className="text-center">
+                <div className="inline-block w-8 h-8 border-4 border-alina-200 border-t-alina-600 rounded-full animate-spin mb-3"></div>
+                <p className="text-sm text-surface-600">
+                  Descargando {driveFiles.length} archivo(s) desde Google Drive
+                </p>
+                <p className="text-xs text-surface-500 mt-1">
+                  Esto puede tardar varios minutos para archivos grandes
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
