@@ -15,7 +15,10 @@ import {
   Mail,
   Home,
   HardDrive,
-  X
+  X,
+  AlertTriangle,
+  WifiOff,
+  ServerCrash
 } from 'lucide-react';
 import { Button, Input, Alert, FileUpload } from '../../components/common';
 import caseService from '../../services/caseService';
@@ -64,6 +67,7 @@ const EvidenceUpload = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState(null);
+  const [errorModal, setErrorModal] = useState(null); // { title, message, type, technicalDetails }
 
   // Google Drive state
   const [sourceMode, setSourceMode] = useState('local'); // 'local' | 'drive'
@@ -182,6 +186,108 @@ const EvidenceUpload = () => {
     return { valid: true, data: cleanData };
   };
 
+  // Analiza un error de upload y devuelve { title, message, type, technicalDetails }
+  // que se renderizara en el modal de error
+  const classifyUploadError = (err) => {
+    // 1. Error de validacion del servidor con details (campo:mensaje)
+    const errorData = err?.response?.data?.error || err?.error;
+    const httpStatus = err?.response?.status || err?.status;
+    const technicalDetails = err?.message || err?.response?.statusText || '';
+
+    // 2. Error de red (sin response): CORS, server down, timeout, sin internet
+    if (!err?.response && (err?.code === 'ERR_NETWORK' || /network\s*error/i.test(err?.message || ''))) {
+      return {
+        title: 'Sin conexion con el servidor',
+        message: 'No se pudo establecer comunicacion con el servidor. Esto puede deberse a: (1) tu conexion a internet, (2) el servidor esta temporalmente fuera de servicio, o (3) el archivo es demasiado grande y la conexion se interrumpio.',
+        type: 'network',
+        technicalDetails: `${err?.code || 'Network Error'}: ${technicalDetails}`,
+        canRetry: true
+      };
+    }
+
+    // 3. Timeout
+    if (err?.code === 'ECONNABORTED' || /timeout/i.test(err?.message || '')) {
+      return {
+        title: 'Tiempo de espera agotado',
+        message: 'La subida tomo demasiado tiempo. Para archivos grandes, intenta con una conexion mas estable o sube el archivo por partes.',
+        type: 'timeout',
+        technicalDetails,
+        canRetry: true
+      };
+    }
+
+    // 4. Errores HTTP con codigo
+    if (httpStatus === 502 || httpStatus === 503 || httpStatus === 504) {
+      return {
+        title: 'Servidor no disponible',
+        message: `El servidor no esta respondiendo correctamente (codigo ${httpStatus}). Probablemente esta reiniciandose o saturado. Por favor, intenta nuevamente en unos minutos.`,
+        type: 'server',
+        technicalDetails: `HTTP ${httpStatus} ${err?.response?.statusText || ''}`,
+        canRetry: true
+      };
+    }
+    if (httpStatus === 413) {
+      return {
+        title: 'Archivo demasiado grande',
+        message: 'El archivo excede el tamano maximo permitido (2 GB). Por favor, comprime el archivo o suba uno mas pequeno.',
+        type: 'size',
+        technicalDetails: `HTTP 413 Payload Too Large`,
+        canRetry: false
+      };
+    }
+    if (httpStatus === 401 || httpStatus === 403) {
+      return {
+        title: 'Sesion expirada o sin permisos',
+        message: 'Tu sesion pudo haber expirado. Por favor, cierra sesion y vuelve a ingresar.',
+        type: 'auth',
+        technicalDetails: `HTTP ${httpStatus}`,
+        canRetry: false
+      };
+    }
+    if (httpStatus === 422) {
+      // Errores de validacion
+      let msg = errorData?.message || 'Datos invalidos.';
+      if (errorData?.details?.length > 0) {
+        const fields = errorData.details.map(d => `${d.field}: ${d.message}`).join(', ');
+        msg += ` Campos: ${fields}.`;
+      }
+      return {
+        title: 'Datos invalidos',
+        message: msg,
+        type: 'validation',
+        technicalDetails: `HTTP 422`,
+        canRetry: false
+      };
+    }
+    if (httpStatus === 409) {
+      return {
+        title: 'Conflicto en la carga',
+        message: errorData?.message || 'Hubo un conflicto al subir el archivo. Es posible que ya exista o este siendo procesado.',
+        type: 'conflict',
+        technicalDetails: `HTTP 409 ${errorData?.code || ''}`,
+        canRetry: false
+      };
+    }
+    if (httpStatus >= 500) {
+      return {
+        title: 'Error del servidor',
+        message: errorData?.message || `El servidor encontro un error al procesar tu carga (codigo ${httpStatus}).`,
+        type: 'server',
+        technicalDetails: `HTTP ${httpStatus} ${errorData?.details || ''}`,
+        canRetry: true
+      };
+    }
+
+    // 5. Default: error del backend o desconocido
+    return {
+      title: 'Error al subir la evidencia',
+      message: errorData?.message || err?.message || 'Ocurrio un error inesperado al subir la evidencia.',
+      type: 'unknown',
+      technicalDetails: httpStatus ? `HTTP ${httpStatus}` : technicalDetails,
+      canRetry: true
+    };
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -262,7 +368,6 @@ const EvidenceUpload = () => {
     } catch (err) {
       // Caso especial import-drive: el backend responde 422 con results por archivo
       // cuando todos los archivos fallaron (token expirado, integridad, etc.).
-      // El error real esta en err.data.results, no en err.error.message.
       const driveResults = err?.data?.data?.results;
       if (Array.isArray(driveResults) && driveResults.length > 0) {
         const failed = driveResults.filter(r => !r.success);
@@ -270,19 +375,22 @@ const EvidenceUpload = () => {
           const detalles = failed
             .map(r => `${r.fileName || r.fileId}: ${r.error || 'Error desconocido'}`)
             .join(' | ');
-          setError(`No se pudo importar desde Google Drive. ${detalles}`);
+          setErrorModal({
+            title: 'No se pudo importar desde Google Drive',
+            message: detalles,
+            type: 'drive',
+            technicalDetails: '',
+            canRetry: true
+          });
           return;
         }
       }
 
-      const errorData = err.response?.data?.error || err.error;
-      let errorMsg = errorData?.message || 'Error al procesar la evidencia';
-      // Mostrar detalles de validacion si existen
-      if (errorData?.details?.length > 0) {
-        const fields = errorData.details.map(d => `${d.field}: ${d.message}`).join('. ');
-        errorMsg += ` (${fields})`;
-      }
-      setError(errorMsg);
+      // Clasificar y mostrar el error en el modal popup
+      const classified = classifyUploadError(err);
+      setErrorModal(classified);
+      // Mantener tambien el Alert inline por compatibilidad
+      setError(classified.message);
     } finally {
       setUploading(false);
     }
@@ -873,6 +981,123 @@ const EvidenceUpload = () => {
                 </p>
               </div>
             )}
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ============================================================ */}
+      {/* MODAL DE ERROR - portal a document.body                      */}
+      {/* Se muestra cuando ocurre cualquier error durante el upload   */}
+      {/* ============================================================ */}
+      {errorModal && createPortal(
+        <div
+          className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="error-modal-title"
+          onClick={(e) => { if (e.target === e.currentTarget) setErrorModal(null); }}
+        >
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-surface-200 animate-in fade-in zoom-in duration-200">
+            {/* Icono segun tipo */}
+            <div className="flex justify-center mb-4">
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
+                errorModal.type === 'network' ? 'bg-orange-100' :
+                errorModal.type === 'server' ? 'bg-red-100' :
+                errorModal.type === 'timeout' ? 'bg-amber-100' :
+                errorModal.type === 'validation' || errorModal.type === 'size' || errorModal.type === 'conflict' ? 'bg-yellow-100' :
+                errorModal.type === 'auth' ? 'bg-blue-100' :
+                'bg-red-100'
+              }`}>
+                {errorModal.type === 'network' ? (
+                  <WifiOff className="w-8 h-8 text-orange-600" />
+                ) : errorModal.type === 'server' || errorModal.type === 'timeout' ? (
+                  <ServerCrash className="w-8 h-8 text-red-600" />
+                ) : (
+                  <AlertTriangle className="w-8 h-8 text-red-600" />
+                )}
+              </div>
+            </div>
+
+            {/* Titulo */}
+            <h3 id="error-modal-title" className="text-lg font-bold text-surface-900 text-center mb-2">
+              {errorModal.title}
+            </h3>
+
+            {/* Mensaje principal */}
+            <p className="text-sm text-surface-700 text-center mb-4">
+              {errorModal.message}
+            </p>
+
+            {/* Detalles tecnicos colapsables (solo si hay) */}
+            {errorModal.technicalDetails && (
+              <details className="mb-4">
+                <summary className="text-xs text-surface-500 cursor-pointer hover:text-surface-700 select-none">
+                  Detalles tecnicos
+                </summary>
+                <div className="mt-2 p-2 bg-surface-100 rounded font-mono text-xs text-surface-600 break-all">
+                  {errorModal.technicalDetails}
+                </div>
+              </details>
+            )}
+
+            {/* Sugerencias segun tipo */}
+            {errorModal.type === 'network' && (
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg text-xs text-blue-800">
+                <p className="font-medium mb-1">Sugerencias:</p>
+                <ul className="list-disc list-inside space-y-0.5">
+                  <li>Verifica tu conexion a internet</li>
+                  <li>Espera unos minutos y vuelve a intentar</li>
+                  <li>Si el problema persiste, contacta al administrador</li>
+                </ul>
+              </div>
+            )}
+            {errorModal.type === 'server' && (
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg text-xs text-blue-800">
+                <p className="font-medium mb-1">Sugerencias:</p>
+                <ul className="list-disc list-inside space-y-0.5">
+                  <li>El servidor pudo estar reiniciandose</li>
+                  <li>Espera 1-2 minutos y vuelve a intentar</li>
+                  <li>Si el problema persiste, reporta el incidente</li>
+                </ul>
+              </div>
+            )}
+            {errorModal.type === 'size' && (
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg text-xs text-blue-800">
+                <p className="font-medium mb-1">Sugerencias:</p>
+                <ul className="list-disc list-inside space-y-0.5">
+                  <li>Comprime el archivo (ZIP) antes de subirlo</li>
+                  <li>Reduce la calidad del video si aplica</li>
+                  <li>Divide el archivo en partes mas pequenas</li>
+                </ul>
+              </div>
+            )}
+
+            {/* Botones de accion */}
+            <div className="flex gap-2 mt-4">
+              <button
+                type="button"
+                onClick={() => setErrorModal(null)}
+                className="flex-1 px-4 py-2 bg-surface-200 hover:bg-surface-300 text-surface-800 rounded-lg font-medium text-sm transition-colors"
+              >
+                Cerrar
+              </button>
+              {errorModal.canRetry && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setErrorModal(null);
+                    setError(null);
+                    // Disparar submit programaticamente
+                    handleSubmit({ preventDefault: () => {} });
+                  }}
+                  className="flex-1 px-4 py-2 bg-alina-600 hover:bg-alina-700 text-white rounded-lg font-medium text-sm transition-colors"
+                >
+                  Reintentar
+                </button>
+              )}
+            </div>
           </div>
         </div>,
         document.body
