@@ -167,7 +167,23 @@ const EvidenceDetail = () => {
       fetchEvidence();
       fetchCustody();
     } catch (err) {
-      toast.error(err.error?.message || 'Error al regenerar');
+      const errorCode = err.error?.code;
+      const errorMessage = err.error?.message;
+
+      // Casos especificos: archivo no recuperable, debe re-subirse
+      if (errorCode === 'UPLOAD_INCOMPLETE' || errorCode === 'FILE_NOT_IN_STORAGE' || errorCode === 'NO_ORIGINAL_FILE') {
+        toast.error(
+          errorMessage || 'El archivo original no esta disponible. Debe subir la evidencia nuevamente.',
+          { duration: 8000 }
+        );
+      } else if (errorCode === 'PIPELINE_ACTIVE') {
+        toast.error(
+          errorMessage || 'La evidencia esta siendo procesada. Espere unos minutos.',
+          { duration: 6000 }
+        );
+      } else {
+        toast.error(errorMessage || 'Error al regenerar');
+      }
     } finally {
       setRegenerating(false);
     }

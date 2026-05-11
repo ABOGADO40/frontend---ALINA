@@ -229,7 +229,12 @@ const EvidenceUpload = () => {
           }
         );
 
-        toast.success(`Evidencia subida y Acta ${response.data.acta?.actaNumero || ''} generada exitosamente.`);
+        // Si el backend detecto una carga duplicada (idempotencia por hash), informarlo
+        if (response.data.isDuplicate) {
+          toast.success(response.data.message || 'Esta evidencia ya existia. Se muestra la existente.', { duration: 7000 });
+        } else {
+          toast.success(`Evidencia subida y Acta ${response.data.acta?.actaNumero || ''} generada exitosamente.`);
+        }
         navigate(`/evidence/${response.data.id}`);
       }
     } catch (err) {
