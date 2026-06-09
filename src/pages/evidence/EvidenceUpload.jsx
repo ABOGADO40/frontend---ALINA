@@ -15,6 +15,7 @@ import {
   Mail,
   Home,
   HardDrive,
+  ImagePlus,
   X,
   AlertTriangle,
   WifiOff,
@@ -27,6 +28,7 @@ import { formatFileSize } from '../../utils/formatters';
 import { MAX_FILE_SIZE } from '../../utils/constants';
 import toast from 'react-hot-toast';
 import GoogleDrivePicker from '../../components/evidence/GoogleDrivePicker';
+import GooglePhotosPicker from '../../components/evidence/GooglePhotosPicker';
 
 /**
  * EvidenceUpload Page
@@ -70,9 +72,14 @@ const EvidenceUpload = () => {
   const [errorModal, setErrorModal] = useState(null); // { title, message, type, technicalDetails }
 
   // Google Drive state
-  const [sourceMode, setSourceMode] = useState('local'); // 'local' | 'drive'
+  const [sourceMode, setSourceMode] = useState('local'); // 'local' | 'drive' | 'photos'
   const [driveFiles, setDriveFiles] = useState([]);
   const [driveAccessToken, setDriveAccessToken] = useState(null);
+
+  // Google Photos state
+  const [photosItems, setPhotosItems] = useState([]);
+  const [photosSessionId, setPhotosSessionId] = useState(null);
+  const [photosAccessToken, setPhotosAccessToken] = useState(null);
 
   useEffect(() => {
     fetchCases();
@@ -144,6 +151,20 @@ const EvidenceUpload = () => {
 
   const removeDriveFile = (fileId) => {
     setDriveFiles((prev) => prev.filter(f => f.id !== fileId));
+  };
+
+  const handlePhotosSelected = ({ mediaItems, sessionId, accessToken }) => {
+    setPhotosItems(mediaItems);
+    setPhotosSessionId(sessionId);
+    setPhotosAccessToken(accessToken);
+    if (!formData.title && mediaItems.length === 1) {
+      const nameWithoutExt = (mediaItems[0].filename || '').replace(/\.[^/.]+$/, '');
+      setFormData((prev) => ({ ...prev, title: nameWithoutExt }));
+    }
+  };
+
+  const removePhotosItem = (itemId) => {
+    setPhotosItems((prev) => prev.filter(it => it.id !== itemId));
   };
 
   // Validar datos del aportante (OBLIGATORIO)
@@ -300,6 +321,10 @@ const EvidenceUpload = () => {
       setError('Selecciona al menos un archivo de Google Drive');
       return;
     }
+    if (sourceMode === 'photos' && photosItems.length === 0) {
+      setError('Selecciona al menos una foto/video de Google Photos');
+      return;
+    }
 
     // Validar datos del aportante
     const contributorValidation = validateContributorData();
@@ -342,6 +367,39 @@ const EvidenceUpload = () => {
         } else {
           setError('Ningun archivo pudo ser importado. Revise los errores.');
         }
+      } else if (sourceMode === 'photos') {
+        // Importar desde Google Photos
+        const response = await evidenceService.importFromPhotos(
+          photosItems,
+          photosSessionId,
+          photosAccessToken,
+          {
+            title: formData.title.trim() || null,
+            description: formData.description.trim() || null,
+            caseId: formData.caseId || null
+          },
+          contributorValidation.data
+        );
+
+        const { results, summary } = response.data;
+        const firstSuccess = results.find(r => r.success);
+
+        if (summary.failed > 0) {
+          const failedNames = results
+            .filter(r => !r.success)
+            .map(r => r.fileName || r.mediaItemId)
+            .join(', ');
+          toast.error(`${summary.failed} archivo(s) con errores: ${failedNames}`);
+        }
+
+        if (firstSuccess) {
+          toast.success(
+            `${summary.success} evidencia(s) importada(s) exitosamente desde Google Photos`
+          );
+          navigate(`/evidence/${firstSuccess.evidenceId}`);
+        } else {
+          setError('Ninguna foto pudo ser importada. Revise los errores.');
+        }
       } else {
         // Upload local (flujo existente sin cambios)
         const response = await evidenceService.uploadEvidence(
@@ -366,19 +424,21 @@ const EvidenceUpload = () => {
         navigate(`/evidence/${response.data.id}`);
       }
     } catch (err) {
-      // Caso especial import-drive: el backend responde 422 con results por archivo
-      // cuando todos los archivos fallaron (token expirado, integridad, etc.).
-      const driveResults = err?.data?.data?.results;
-      if (Array.isArray(driveResults) && driveResults.length > 0) {
-        const failed = driveResults.filter(r => !r.success);
+      // Caso especial import-drive/import-photos: el backend responde 422 con
+      // results por archivo cuando todos los archivos fallaron (token expirado,
+      // integridad, sesion expirada, etc.). Soportamos ambos formatos de id.
+      const remoteResults = err?.data?.data?.results || err?.response?.data?.data?.results;
+      if (Array.isArray(remoteResults) && remoteResults.length > 0) {
+        const failed = remoteResults.filter(r => !r.success);
         if (failed.length > 0) {
           const detalles = failed
-            .map(r => `${r.fileName || r.fileId}: ${r.error || 'Error desconocido'}`)
+            .map(r => `${r.fileName || r.fileId || r.mediaItemId || 'item'}: ${r.error || 'Error desconocido'}`)
             .join(' | ');
+          const sourceLabel = sourceMode === 'photos' ? 'Google Photos' : 'Google Drive';
           setErrorModal({
-            title: 'No se pudo importar desde Google Drive',
+            title: `No se pudo importar desde ${sourceLabel}`,
             message: detalles,
-            type: 'drive',
+            type: sourceMode === 'photos' ? 'photos' : 'drive',
             technicalDetails: '',
             canRetry: true
           });
@@ -433,7 +493,14 @@ const EvidenceUpload = () => {
           <div className="flex gap-2 mb-4">
             <button
               type="button"
-              onClick={() => { setSourceMode('local'); setDriveFiles([]); setDriveAccessToken(null); }}
+              onClick={() => {
+                setSourceMode('local');
+                setDriveFiles([]);
+                setDriveAccessToken(null);
+                setPhotosItems([]);
+                setPhotosSessionId(null);
+                setPhotosAccessToken(null);
+              }}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                 sourceMode === 'local'
                   ? 'bg-alina-50 text-alina-700 border-2 border-alina-500'
@@ -446,7 +513,13 @@ const EvidenceUpload = () => {
             </button>
             <button
               type="button"
-              onClick={() => { setSourceMode('drive'); setSelectedFile(null); }}
+              onClick={() => {
+                setSourceMode('drive');
+                setSelectedFile(null);
+                setPhotosItems([]);
+                setPhotosSessionId(null);
+                setPhotosAccessToken(null);
+              }}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                 sourceMode === 'drive'
                   ? 'bg-alina-50 text-alina-700 border-2 border-alina-500'
@@ -456,6 +529,24 @@ const EvidenceUpload = () => {
             >
               <HardDrive className="w-4 h-4" />
               Google Drive
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSourceMode('photos');
+                setSelectedFile(null);
+                setDriveFiles([]);
+                setDriveAccessToken(null);
+              }}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                sourceMode === 'photos'
+                  ? 'bg-alina-50 text-alina-700 border-2 border-alina-500'
+                  : 'bg-surface-900/30 text-surface-400 border-2 border-transparent hover:border-surface-700'
+              }`}
+              disabled={uploading}
+            >
+              <ImagePlus className="w-4 h-4" />
+              Google Photos
             </button>
           </div>
 
@@ -518,6 +609,52 @@ const EvidenceUpload = () => {
                       )}
                     </div>
                   ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Google Photos picker */}
+          {sourceMode === 'photos' && (
+            <>
+              <GooglePhotosPicker
+                onMediaItemsSelected={handlePhotosSelected}
+                disabled={uploading}
+              />
+
+              {photosItems.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <p className="text-sm font-medium text-surface-300">
+                    {photosItems.length} elemento(s) seleccionado(s)
+                  </p>
+                  {photosItems.map((item) => (
+                    <div key={item.id} className="flex items-center gap-3 p-3 bg-surface-900/40 rounded-lg">
+                      <div className="w-8 h-8 bg-alina-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <ImagePlus className="w-4 h-4 text-alina-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-surface-50 truncate">{item.filename}</p>
+                        <p className="text-xs text-surface-400">{item.type || 'Media'} {item.mimeType ? `- ${item.mimeType}` : ''}</p>
+                      </div>
+                      {!uploading && (
+                        <button
+                          type="button"
+                          onClick={() => removePhotosItem(item.id)}
+                          className="p-1 text-surface-400 hover:text-danger-500 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+
+                  <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-xs text-amber-900">
+                      <strong>Nota forense:</strong> Google Photos no expone hashes de origen.
+                      La verificacion de integridad sera unicamente local (SHA-256 calculado durante la descarga),
+                      a diferencia de Google Drive.
+                    </p>
+                  </div>
                 </div>
               )}
             </>
@@ -873,10 +1010,16 @@ const EvidenceUpload = () => {
           <Button
             type="submit"
             loading={uploading}
-            disabled={sourceMode === 'local' ? !selectedFile : driveFiles.length === 0}
+            disabled={
+              sourceMode === 'local' ? !selectedFile :
+              sourceMode === 'drive' ? driveFiles.length === 0 :
+              photosItems.length === 0
+            }
             icon={Upload}
           >
-            {sourceMode === 'drive' ? 'Importar Evidencia' : 'Subir Evidencia'}
+            {sourceMode === 'drive' ? 'Importar desde Drive' :
+             sourceMode === 'photos' ? 'Importar desde Photos' :
+             'Subir Evidencia'}
           </Button>
           <Link to="/evidence">
             <Button variant="secondary" disabled={uploading}>
@@ -921,6 +1064,8 @@ const EvidenceUpload = () => {
               <div className="w-16 h-16 bg-alina-100 rounded-full flex items-center justify-center">
                 {sourceMode === 'drive' ? (
                   <HardDrive className="w-8 h-8 text-alina-700 animate-pulse" />
+                ) : sourceMode === 'photos' ? (
+                  <ImagePlus className="w-8 h-8 text-alina-700 animate-pulse" />
                 ) : (
                   <Upload className="w-8 h-8 text-alina-700 animate-pulse" />
                 )}
@@ -931,6 +1076,8 @@ const EvidenceUpload = () => {
             <h3 id="upload-modal-title" className="text-xl font-bold text-gray-900 text-center mb-3" style={{ color: '#111827' }}>
               {sourceMode === 'drive'
                 ? 'Importando desde Google Drive...'
+                : sourceMode === 'photos'
+                ? 'Importando desde Google Photos...'
                 : (uploadProgress < 100 ? 'Subiendo archivo...' : 'Procesando en el servidor...')}
             </h3>
 
@@ -978,6 +1125,19 @@ const EvidenceUpload = () => {
                 </p>
                 <p className="text-xs text-gray-700 mt-1" style={{ color: '#374151' }}>
                   Esto puede tardar varios minutos para archivos grandes
+                </p>
+              </div>
+            )}
+
+            {/* Para Google Photos: spinner sin barra (no hay progreso medible) */}
+            {sourceMode === 'photos' && (
+              <div className="text-center">
+                <div className="inline-block w-8 h-8 border-4 border-alina-200 border-t-alina-700 rounded-full animate-spin mb-3"></div>
+                <p className="text-sm text-gray-800 font-medium" style={{ color: '#1f2937' }}>
+                  Descargando {photosItems.length} elemento(s) desde Google Photos
+                </p>
+                <p className="text-xs text-gray-700 mt-1" style={{ color: '#374151' }}>
+                  Esto puede tardar varios minutos para videos
                 </p>
               </div>
             )}

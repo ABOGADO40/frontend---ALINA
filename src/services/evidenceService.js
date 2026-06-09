@@ -219,6 +219,38 @@ const evidenceService = {
 
     const response = await apiClient.post('/evidence/import-drive', payload);
     return response.data;
+  },
+
+  /**
+   * Import evidence from Google Photos via Picker API
+   * @param {Array<{id, type, mimeType, filename}>} mediaItems - Photos seleccionadas
+   * @param {string} sessionId - ID de la sesion del Picker
+   * @param {string} accessToken - OAuth access token con scope photospicker.mediaitems.readonly
+   * @param {Object} metadata - { title, description, caseId }
+   * @param {Object} contributorData - Datos del aportante para el Acta
+   * @returns {Promise<Object>} { success, data: { results, summary, message } }
+   */
+  async importFromPhotos(mediaItems, sessionId, accessToken, metadata = {}, contributorData = null) {
+    const payload = {
+      mediaItems,
+      sessionId,
+      accessToken
+    };
+
+    if (metadata.title) payload.title = metadata.title;
+    if (metadata.description) payload.description = metadata.description;
+    if (metadata.caseId) payload.caseId = metadata.caseId;
+
+    if (contributorData) {
+      Object.entries(contributorData).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== '') {
+          payload[key] = value;
+        }
+      });
+    }
+
+    const response = await apiClient.post('/evidence/import-photos', payload);
+    return response.data;
   }
 };
 
