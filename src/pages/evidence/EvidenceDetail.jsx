@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   FileCheck,
@@ -22,9 +22,11 @@ import {
   FileSearch,
   Mail,
   Phone,
-  X
+  X,
+  Trash2
 } from 'lucide-react';
 import { Button, Loading, Alert } from '../../components/common';
+import { ConfirmModal } from '../../components/common/Modal';
 import evidenceService from '../../services/evidenceService';
 import custodyService from '../../services/custodyService';
 import actaService from '../../services/actaService';
@@ -48,6 +50,7 @@ const POLLING_INTERVAL = 3000;
  */
 const EvidenceDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [evidence, setEvidence] = useState(null);
   const [custody, setCustody] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -56,6 +59,10 @@ const EvidenceDetail = () => {
   const [regenerating, setRegenerating] = useState(false);
   const [togglingPublic, setTogglingPublic] = useState(false);
   const [isPolling, setIsPolling] = useState(false);
+
+  // Estados para eliminar evidencia
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Estados para Actas
   const [contributors, setContributors] = useState([]);
@@ -186,6 +193,18 @@ const EvidenceDetail = () => {
       }
     } finally {
       setRegenerating(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await evidenceService.deleteEvidence(id);
+      toast.success('Evidencia eliminada exitosamente');
+      navigate('/evidence');
+    } catch (err) {
+      toast.error(err.error?.message || 'Error al eliminar la evidencia');
+      setDeleting(false);
     }
   };
 
@@ -439,6 +458,15 @@ const EvidenceDetail = () => {
                 </Button>
               </Link>
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              icon={Trash2}
+              onClick={() => setDeleteModal(true)}
+              className="text-danger-400 border-danger-500/30 hover:bg-danger-500/10 hover:border-danger-500/50"
+            >
+              Eliminar
+            </Button>
           </div>
         </div>
 
@@ -1029,6 +1057,18 @@ const EvidenceDetail = () => {
           </div>
         </div>
       )}
+
+      {/* Modal: Confirmar eliminacion de evidencia */}
+      <ConfirmModal
+        isOpen={deleteModal}
+        onClose={() => setDeleteModal(false)}
+        onConfirm={handleDelete}
+        title="Eliminar Evidencia"
+        message={`¿Estas seguro de eliminar la evidencia "${evidence.title || 'Sin titulo'}"? Dejara de estar disponible en tu listado.`}
+        confirmText="Eliminar"
+        variant="danger"
+        loading={deleting}
+      />
 
       {/* Risk Report */}
       {evidence.riskReport && (

@@ -5,9 +5,12 @@ import {
   FileCheck,
   Search,
   Filter,
-  RefreshCw
+  RefreshCw,
+  Trash2
 } from 'lucide-react';
 import { Button, Input, Table, Loading, Alert } from '../../components/common';
+import { ConfirmModal } from '../../components/common/Modal';
+import toast from 'react-hot-toast';
 import evidenceService from '../../services/evidenceService';
 import { formatDate, formatFileSize } from '../../utils/formatters';
 import {
@@ -33,6 +36,10 @@ const EvidenceList = () => {
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '');
   const [typeFilter, setTypeFilter] = useState(searchParams.get('sourceType') || '');
   const [showFilters, setShowFilters] = useState(false);
+
+  // Estados para eliminar evidencia
+  const [deleteModal, setDeleteModal] = useState({ open: false, evidenceId: null, title: '' });
+  const [deleting, setDeleting] = useState(false);
 
   const [pagination, setPagination] = useState({
     page: parseInt(searchParams.get('page')) || 1,
@@ -103,6 +110,23 @@ const EvidenceList = () => {
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
+  const handleDelete = async () => {
+    if (!deleteModal.evidenceId) return;
+
+    setDeleting(true);
+
+    try {
+      await evidenceService.deleteEvidence(deleteModal.evidenceId);
+      toast.success('Evidencia eliminada exitosamente');
+      setDeleteModal({ open: false, evidenceId: null, title: '' });
+      fetchEvidence();
+    } catch (err) {
+      toast.error(err.error?.message || 'Error al eliminar la evidencia');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const columns = [
     {
       key: 'title',
@@ -171,11 +195,23 @@ const EvidenceList = () => {
       key: 'actions',
       header: '',
       render: (_, row) => (
-        <Link to={`/evidence/${row.id}`}>
-          <Button variant="ghost" size="sm">
-            Ver
+        <div className="flex items-center gap-2">
+          <Link to={`/evidence/${row.id}`}>
+            <Button variant="ghost" size="sm">
+              Ver
+            </Button>
+          </Link>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() =>
+              setDeleteModal({ open: true, evidenceId: row.id, title: row.title })
+            }
+            className="text-danger-400 hover:text-danger-400 hover:bg-danger-500/10"
+          >
+            <Trash2 className="w-4 h-4" />
           </Button>
-        </Link>
+        </div>
       )
     }
   ];
@@ -311,6 +347,18 @@ const EvidenceList = () => {
           </Link>
         </div>
       )}
+
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={deleteModal.open}
+        onClose={() => setDeleteModal({ open: false, evidenceId: null, title: '' })}
+        onConfirm={handleDelete}
+        title="Eliminar Evidencia"
+        message={`¿Estas seguro de eliminar la evidencia "${deleteModal.title || 'Sin titulo'}"? Dejara de estar disponible en tu listado.`}
+        confirmText="Eliminar"
+        variant="danger"
+        loading={deleting}
+      />
     </div>
   );
 };

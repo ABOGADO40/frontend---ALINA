@@ -109,6 +109,16 @@ const evidenceService = {
   },
 
   /**
+   * Delete evidence (soft delete)
+   * @param {string|number} evidenceId - Evidence ID
+   * @returns {Promise<Object>} Delete response
+   */
+  async deleteEvidence(evidenceId) {
+    const response = await apiClient.delete(`/evidence/${evidenceId}`);
+    return response.data;
+  },
+
+  /**
    * Toggle evidence public verification status
    * @param {string|number} evidenceId - Evidence ID
    * @param {Object} contactData - Contact data (required when making private)
